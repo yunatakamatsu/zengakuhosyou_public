@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>全額補償にまつわる在庫管理フロー（理想）</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap');
+    body {
+      font-family: 'Noto Sans JP', 'Inter', sans-serif;
+      background-color: #f8fafc;
+    }
+    .arrow-right::after {
+      content: '';
+      position: absolute;
+      right: -14px;
+      top: 50%;
+      transform: translateY(-50%);
+      border-width: 8px 0 8px 12px;
+      border-style: solid;
+      border-color: transparent transparent transparent #94a3b8;
+    }
+    .editable-focus:focus {
+      outline: 2px solid #3b82f6;
+      background-color: #fff;
+      border-radius: 4px;
+      padding: 2px 4px;
+    }
+    /* Flow Connector lines */
+    .connector-line {
+      position: relative;
+    }
+    .connector-line::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: -20px;
+      width: 20px;
+      height: 2px;
+      background-color: #cbd5e1;
+    }
+  </style>
+</head>
+<body class="p-4 md:p-8 text-slate-800">
+
+  <!-- Header Controls -->
+  <div class="max-w-7xl mx-auto mb-6 flex flex-wrap items-center justify-between gap-4 bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+    <div class="flex items-center gap-3">
+      <div class="p-2.5 bg-blue-600 text-white rounded-lg shadow-md shadow-blue-500/20">
+        <i class="fa-solid me-0 fa-boxes-stacked text-xl"></i>
+      </div>
+      <div>
+        <h1 class="text-xl font-bold text-slate-900">全額補償 在庫管理フロー設計ボード</h1>
+        <p class="text-xs text-slate-500">Notion埋め込み用・ロケ＆原価登録ステータス可視化ツール</p>
+      </div>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-3">
+      <button id="toggleEditBtn" onclick="toggleEditMode()" class="px-3.5 py-2 text-sm font-medium rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition flex items-center gap-2">
+        <i class="fa-solid fa-pen-to-square"></i>
+        <span>編集モード: <strong id="editStatusText" class="text-blue-600">ON</strong></span>
+      </button>
+
+      <button onclick="copyAsMarkdown()" class="px-3.5 py-2 text-sm font-medium rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition flex items-center gap-2">
+        <i class="fa-solid fa-copy"></i>
+        <span>テキストでコピー (Notion用)</span>
+      </button>
+
+      <button onclick="copyHTMLCode()" class="px-3.5 py-2 text-sm font-medium rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition flex items-center gap-2">
+        <i class="fa-solid fa-code"></i>
+        <span>HTMLコードをコピー</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Container -->
+  <div id="flowboard" class="max-w-7xl mx-auto bg-slate-50 border border-slate-200 rounded-2xl p-6 shadow-sm overflow-x-auto">
+    
+    <!-- Title Section -->
+    <div class="text-center mb-8 border-b border-slate-200 pb-4">
+      <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold uppercase tracking-wider">Ideal Inventory Flow</span>
+      <h2 class="text-2xl font-bold text-slate-800 mt-2 content-editable" contenteditable="true">全額補償にまつわる在庫管理フロー（理想）</h2>
+      <p class="text-sm text-slate-500 mt-1 content-editable" contenteditable="true">倉庫内在庫の透明化（ロジザード連携）と経理上の原価登録タイミングの最適化</p>
+    </div>
+
+    <!-- Process Flow Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 min-w-[900px]">
+
+      <!-- STEP 1: 着荷 -->
+      <div class="lg:col-span-3 flex flex-col">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="w-6 h-6 rounded-full bg-slate-800 text-white text-xs font-bold flex items-center justify-center">1</span>
+          <h3 class="font-bold text-slate-700">着荷・初期入庫</h3>
+        </div>
+
+        <div class="bg-white p-5 rounded-xl border-2 border-slate-300 shadow-sm flex-1 flex flex-col justify-between hover:border-blue-400 transition">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <span class="px-2.5 py-1 bg-amber-100 text-amber-800 text-xs font-bold rounded-md border border-amber-200">
+                <i class="fa-solid fa-warehouse mr-1"></i><span class="content-editable" contenteditable="true">Cロケ (入荷専用)</span>
+              </span>
+              <span class="px-2 py-0.5 bg-slate-100 text-slate-600 text-xs font-medium rounded">
+                原価: <span class="text-amber-600 font-bold content-editable" contenteditable="true">未登録</span>
+              </span>
+            </div>
+
+            <div class="flex items-center gap-3 my-4 p-3 bg-slate-50 rounded-lg border border-slate-100">
+              <i class="fa-solid fa-truck-ramp-box text-3xl text-slate-600"></i>
+              <div>
+                <h4 class="font-bold text-slate-800 text-sm content-editable" contenteditable="true">全額補償 着荷商品</h4>
+                <p class="text-xs text-slate-500 content-editable" contenteditable="true">倉庫到着分を全量カウント</p>
+              </div>
+            </div>
+
+            <ul class="text-xs text-slate-600 space-y-2 bg-blue-50/50 p-3 rounded-lg border border-blue-100">
+              <li class="flex items-start gap-1.5">
+                <i class="fa-solid fa-check text-blue-500 mt-0.5"></i>
+                <span class="content-editable" contenteditable="true">倉庫内の全荷物をシステム（ロジザード）へ登録</span>
+              </li>
+              <li class="flex items-start gap-1.5">
+                <i class="fa-solid fa-check text-blue-500 mt-0.5"></i>
+                <span class="content-editable" contenteditable="true">まずは「Cロケ」にて一括入庫処理</span>
+              </li>
+            </ul>
+          </div>
+
+          <div class="mt-4 pt-3 border-t border-slate-100 text-right">
+            <span class="text-xs text-slate-400 font-medium">判定分岐へ移動 <i class="fa-solid fa-arrow-right ml-1"></i></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 2: 条件分岐 & 移動 & 原価登録 -->
+      <div class="lg:col-span-6 flex flex-col">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="w-6 h-6 rounded-full bg-slate-800 text-white text-xs font-bold flex items-center justify-center">2</span>
+          <h3 class="font-bold text-slate-700">判定・棚移動・原価登録</h3>
+        </div>
+
+        <div class="space-y-4 flex-1 flex flex-col justify-between">
+
+          <!-- 分岐 2-1: 画像補償決定済み -->
+          <div class="bg-white p-4 rounded-xl border border-emerald-300 shadow-sm relative hover:shadow-md transition">
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-2">
+                <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-xs font-bold rounded">2-1</span>
+                <h4 class="font-bold text-sm text-slate-800 content-editable" contenteditable="true">添付画像で補償確定済み</h4>
+              </div>
+              <span class="px-2.5 py-1 bg-emerald-500 text-white text-xs font-bold rounded-md shadow-sm">
+                <i class="fa-solid fa-circle-check mr-1"></i><span class="content-editable" contenteditable="true">原価登録：要（完了）</span>
+              </span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+              <div class="p-2.5 bg-emerald-50/60 rounded-lg border border-emerald-100">
+                <div class="text-xs text-emerald-700 font-medium mb-1">移動先ロケ</div>
+                <div class="font-bold text-slate-800 text-sm flex items-center gap-1.5">
+                  <i class="fa-solid fa-location-dot text-emerald-600"></i>
+                  <span class="content-editable" contenteditable="true">Dロケ (補償決定ロケ)</span>
+                </div>
+                <p class="text-[11px] text-slate-500 mt-1 content-editable" contenteditable="true">CロケからDロケへ棚移動</p>
+              </div>
+
+              <div class="p-2.5 bg-emerald-50/60 rounded-lg border border-emerald-100">
+                <div class="text-xs text-emerald-700 font-medium mb-1">経理・資産管理ステータス</div>
+                <div class="font-bold text-emerald-900 text-xs flex items-center gap-1">
+                  <i class="fa-solid fa-file-invoice-dollar text-emerald-600"></i>
+                  <span class="content-editable" contenteditable="true">資産表での報告対象</span>
+                </div>
+                <p class="text-[11px] text-slate-500 mt-1 content-editable" contenteditable="true">ロジザード上で原価登録完了済み</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 分岐 2-2: 再鑑定 -->
+          <div class="bg-white p-4 rounded-xl border border-amber-200 shadow-sm hover:shadow-md transition">
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-2">
+                <span class="px-2 py-0.5 bg-amber-100 text-amber-800 text-xs font-bold rounded">2-2</span>
+                <h4 class="font-bold text-sm text-slate-800 content-editable" contenteditable="true">画像で判定不可（要・再鑑定）</h4>
+              </div>
+              <span class="px-2.5 py-1 bg-slate-100 text-slate-700 text-xs font-bold rounded-md border border-slate-200">
+                <i class="fa-solid fa-boxes-packing mr-1"></i><span class="content-editable" contenteditable="true">KTロケ (再鑑定ロケ) へ移動</span>
+              </span>
+            </div>
+
+            <!-- サブ分岐 -->
+            <div class="mt-3 pt-3 border-t border-slate-100 grid grid-cols-1 md:grid-cols-2 gap-3">
+              <!-- 2-2-1 -->
+              <div class="p-2.5 bg-slate-50 rounded-lg border border-slate-200">
+                <div class="flex items-center justify-between mb-1">
+                  <span class="text-[11px] font-bold text-blue-700">2-2-1. 再鑑定後 補償決定</span>
+                  <span class="text-[10px] bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded font-bold">原価登録：要</span>
+                </div>
+                <div class="text-xs font-semibold text-slate-700 mt-1">
+                  <i class="fa-solid fa-arrow-right text-blue-500 mr-1"></i>
+                  <span class="content-editable" contenteditable="true">Dロケへ棚移動 & 原価登録</span>
+                </div>
+                <p class="text-[10px] text-slate-400 mt-1 content-editable" contenteditable="true">※着荷時決定分との区別要否はlogiと要確認</p>
+              </div>
+
+              <!-- 2-2-2 -->
+              <div class="p-2.5 bg-slate-50 rounded-lg border border-slate-200">
+                <div class="flex items-center justify-between mb-1">
+                  <span class="text-[11px] font-bold text-rose-700">2-2-2. 再鑑定後 補償対象外</span>
+                  <span class="text-[10px] bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded font-bold">原価登録：不要</span>
+                </div>
+                <div class="text-xs font-semibold text-slate-700 mt-1">
+                  <i class="fa-solid fa-arrow-right text-rose-500 mr-1"></i>
+                  <span class="content-editable" contenteditable="true">Eロケ (対象外) へ棚付け → 再発送</span>
+                </div>
+                <p class="text-[10px] text-slate-400 mt-1 content-editable" contenteditable="true">経理上の原価登録は行わない</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- STEP 3: 自社出品 -->
+      <div class="lg:col-span-3 flex flex-col">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="w-6 h-6 rounded-full bg-slate-800 text-white text-xs font-bold flex items-center justify-center">3</span>
+          <h3 class="font-bold text-slate-700">自社出品</h3>
+        </div>
+
+        <div class="bg-white p-5 rounded-xl border-2 border-indigo-200 shadow-sm flex-1 flex flex-col justify-between hover:border-indigo-400 transition">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <span class="px-2.5 py-1 bg-indigo-100 text-indigo-800 text-xs font-bold rounded-md border border-indigo-200">
+                <i class="fa-solid fa-shop mr-1"></i><span class="content-editable" contenteditable="true">Aロケ (出品ロケ)</span>
+              </span>
+              <span class="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-xs font-bold rounded">
+                原価: 完了済み
+              </span>
+            </div>
+
+            <div class="flex items-center gap-3 my-4 p-3 bg-indigo-50/50 rounded-lg border border-indigo-100">
+              <i class="fa-solid fa-box-open text-3xl text-indigo-600"></i>
+              <div>
+                <h4 class="font-bold text-slate-800 text-sm content-editable" contenteditable="true">自社での出品・販売</h4>
+                <p class="text-xs text-slate-500 content-editable" contenteditable="true">Dロケからの棚移動</p>
+              </div>
+            </div>
+
+            <div class="p-3 bg-slate-50 rounded-lg border border-slate-200 text-xs text-slate-600 space-y-2">
+              <div class="font-bold text-indigo-900 flex items-center gap-1">
+                <i class="fa-solid fa-shield-halved text-indigo-500"></i>
+                <span>原価データの保証</span>
+              </div>
+              <p class="text-[11px] leading-relaxed text-slate-500 content-editable" contenteditable="true">
+                前段階（Dロケ到達時）で原価登録が必須化されているため、Aロケに移動した商品は<strong>必然的にすべて原価が登録された状態</strong>が担保されます。
+              </p>
+            </div>
+          </div>
+
+          <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-emerald-600 font-bold">
+            <span><i class="fa-solid fa-circle-check mr-1"></i>資産管理完了</span>
+            <i class="fa-solid fa-arrow-trend-up"></i>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Location Legend & Quick Reference -->
+    <div class="mt-8 pt-6 border-t border-slate-200 grid grid-cols-2 md:grid-cols-5 gap-3 text-xs">
+      <div class="p-2.5 bg-white rounded-lg border border-slate-200 flex items-center gap-2">
+        <span class="w-3 h-3 rounded-full bg-amber-400"></span>
+        <div><strong class="block text-slate-700 content-editable" contenteditable="true">Cロケ</strong><span class="text-slate-400 content-editable" contenteditable="true">着荷・仮入庫</span></div>
+      </div>
+      <div class="p-2.5 bg-white rounded-lg border border-slate-200 flex items-center gap-2">
+        <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
+        <div><strong class="block text-slate-700 content-editable" contenteditable="true">Dロケ</strong><span class="text-slate-400 content-editable" contenteditable="true">補償決定・原価有</span></div>
+      </div>
+      <div class="p-2.5 bg-white rounded-lg border border-slate-200 flex items-center gap-2">
+        <span class="w-3 h-3 rounded-full bg-blue-500"></span>
+        <div><strong class="block text-slate-700 content-editable" contenteditable="true">KTロケ</strong><span class="text-slate-400 content-editable" contenteditable="true">再鑑定用</span></div>
+      </div>
+      <div class="p-2.5 bg-white rounded-lg border border-slate-200 flex items-center gap-2">
+        <span class="w-3 h-3 rounded-full bg-slate-400"></span>
+        <div><strong class="block text-slate-700 content-editable" contenteditable="true">Eロケ</strong><span class="text-slate-400 content-editable" contenteditable="true">対象外・返送</span></div>
+      </div>
+      <div class="p-2.5 bg-white rounded-lg border border-slate-200 flex items-center gap-2">
+        <span class="w-3 h-3 rounded-full bg-indigo-500"></span>
+        <div><strong class="block text-slate-700 content-editable" contenteditable="true">Aロケ</strong><span class="text-slate-400 content-editable" contenteditable="true">自社出品中</span></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed bottom-5 right-5 bg-slate-900 text-white px-4 py-3 rounded-lg shadow-xl text-sm flex items-center gap-2 opacity-0 pointer-events-none transition-all duration-300 transform translate-y-2">
+    <i class="fa-solid fa-circle-check text-emerald-400"></i>
+    <span id="toastMsg">クリップボードにコピーしました！</span>
+  </div>
+
+  <script>
+    let isEditMode = true;
+
+    function toggleEditMode() {
+      isEditMode = !isEditMode;
+      const editables = document.querySelectorAll('.content-editable');
+      const statusText = document.getElementById('editStatusText');
+      
+      editables.forEach(el => {
+        el.contentEditable = isEditMode;
+        if(isEditMode) {
+          el.classList.add('editable-focus');
+        } else {
+          el.classList.remove('editable-focus');
+        }
+      });
+
+      statusText.innerText = isEditMode ? 'ON' : 'OFF';
+      statusText.className = isEditMode ? 'text-blue-600' : 'text-slate-400';
+      showToast(isEditMode ? '編集モードが有効になりました（文字をクリックして変更可能）' : '編集モードをオフにしました');
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toastMsg');
+      toastMsg.innerText = message;
+      toast.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-2');
+      
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'pointer-events-none', 'translate-y-2');
+      }, 3000);
+    }
+
+    function copyHTMLCode() {
+      const htmlContent = document.documentElement.outerHTML;
+      copyToClipboard(htmlContent);
+      showToast('HTMLコードをコピーしました！NotionのEmbedやHTMLブロックに貼り付けできます');
+    }
+
+    function copyAsMarkdown() {
+      const markdownText = `
+# 全額補償にまつわる在庫管理フロー（理想）
+
+### 1. 着荷 (Cロケ: 入荷専用ロケ)
+- 全額補償で着荷した商品はすべてロジザードへ入れる（Cロケへ入庫）
+- **原価登録**: 未登録
+
+---
+
+### 2. 条件分岐・判定・棚移動
+#### 【2-1】画像で補償決定済み
+- **移動**: Cロケ → **Dロケ (補償決定ロケ)**
+- **原価登録**: **要（登録完了）**
+- **経理ステータス**: ロジザード上で原価登録され、資産表で報告対象となる
+
+#### 【2-2】画像判断不可（再鑑定）
+- **移動**: Cロケ → **KTロケ (再鑑定ロケ)**
+  - **2-2-1. 再鑑定後 補償決定**:
+    - **移動**: KTロケ → **Dロケ**
+    - **原価登録**: **要** (※初着荷決定分との区別要否はlogiと確認)
+  - **2-2-2. 再鑑定後 補償対象外**:
+    - **移動**: KTロケ → **Eロケ (対象外ロケ)** → 再発送
+    - **原価登録**: **不要** (経理上の登録は行わない)
+
+---
+
+### 3. 自社出品
+- **移動**: Dロケ → **Aロケ (出品ロケ)**
+- **原価登録**: **登録済み** (前段階のDロケ通過時に登録されているため、すべて原価が入っている状態が担保される)
+      `.trim();
+
+      copyToClipboard(markdownText);
+      showToast('Notion用テキスト(Markdown)をコピーしました！');
+    }
+
+    function copyToClipboard(text) {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+    }
+
+    // Initialize editable styles
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('.content-editable').forEach(el => {
+        el.classList.add('editable-focus');
+      });
+    });
+  </script>
+</body>
+</html>
